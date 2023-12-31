@@ -14,10 +14,6 @@ def scrape_country_links(context):
     
     all_match_links = []
     
-    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    current_time = datetime.datetime.now()
-    table_name_suffix = current_time.strftime('%Y%m%d%H')
-    
     # Iterate through the list of country links
     for link in country_links:
         country_url = link['href']
@@ -35,8 +31,6 @@ def scrape_country_links(context):
         })
     
     country_df = pd.DataFrame(country_pages_content)
-    
-    country_table_name = f"raw.country_links_{table_name_suffix}"
     pandas_gbq.to_gbq(country_df, 'raw.country_links', project_id=project_id, if_exists='replace')
 
 @asset
@@ -111,7 +105,6 @@ def scrape_match_links(context):
 
             matches_data.append(match_dict)
     matches_df = pd.DataFrame(matches_data)
-    matches_table_name = f"raw.matches_{table_name_suffix}"
     pandas_gbq.to_gbq(matches_df, 'raw.matches', project_id=project_id, if_exists='append')
 
 @asset

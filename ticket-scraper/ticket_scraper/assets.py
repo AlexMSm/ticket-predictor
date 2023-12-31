@@ -39,4 +39,77 @@ def scrape_country_links(context):
     country_table_name = f"raw.country_links_{table_name_suffix}"
     pandas_gbq.to_gbq(country_df, 'raw.country_links', project_id=project_id, if_exists='replace')
 
+@asset
+def scrape_match_links(context):
+    # Configure BigQuery client
+    client = bigquery.Client()
 
+    query = """
+    SELECT DISTINCT url FROM `project_id.dataset.raw_country_links`
+    """
+    # Execute the query
+    query_job = client.query(query)
+    urls = [row.url for row in query_job]
+
+    all_match_links = []
+    matches_data = []
+
+    # Iterate through URLs to find match URLs
+    for country_url in urls:
+
+    country_soup = BeautifulSoup(requests.get(country_url).text, 'html.parser')   
+
+    match_links = country_soup.select('.event-list-item-inner .event-info-name a')
+
+    # Extract the 'href' attribute (the URL) from each link
+    match_urls = [a['href'] for a in match_links]
+
+    for match_url in match_urls:
+        if match_url in all_match_links:
+            pass
+        else:
+            all_match_links.append(match_url)
+
+            match_soup = BeautifulSoup(requests.get(match_url).text, 'html.parser')
+            venue = match_soup.find(attrs={"data-qa": "event-venue"}).get_text(strip=True)
+            # Find the element with the data-qa attribute set to 'event-location'
+            location = match_soup.find(attrs={"data-qa": "event-location"}).get_text(strip=True)
+            tickets_available = match_soup.find(class_="tickets-available").span.get_text(strip=True)
+            tickets = match_soup.select('li.ticket-row')
+
+            # Find the element with the class 'box-header--title'
+            title_element = match_soup.find(class_="box-header--title").get_text(strip=True)
+            
+            title_pattern = r'MATCH (\d+) - (.+?)v(.+) Tickets'
+            title_match = re.search(title_pattern, title_element)
+
+            # Define a regex pattern to extract the team codes from the URL
+            url_pattern = r'match-\d+-(\w+)-v-(\w+)-tickets'
+            url_matched = re.search(url_pattern, match_url)
+
+            if title_match and url_matched:
+                match_number = title_match.group(1)
+                team_one = title_match.group(2).strip()
+                team_two = title_match.group(3).strip()
+                team_one_code = url_matched.group(1).upper()
+                team_two_code = url_matched.group(2).upper()
+                # print(match_number, team_one, team_two, team_one_code, team_two_code)
+            
+            if team_one_code == 'GERMANY':
+                team_one_code = 'A1'
+
+            match_dict = {
+                'match_url': match_url,
+                'match_id': match_number,
+                'venue': venue,
+                'partition': 1,
+                'home_country': team_one,
+                'away_country': team_two,
+                'home_country_id': team_one_code,
+                'away_country_id': team_two_code
+            }
+
+            matches_data.append(match_dict)
+    matches_df = pd.DataFrame(matches_data)
+    matches_table_name = f"raw.matches_{table_name_suffix}"
+    pandas_gbq.to_gbq(matches_df, 'raw.matches', project_id=project_id, if_exists='append')

@@ -113,3 +113,55 @@ def scrape_match_links(context):
     matches_df = pd.DataFrame(matches_data)
     matches_table_name = f"raw.matches_{table_name_suffix}"
     pandas_gbq.to_gbq(matches_df, 'raw.matches', project_id=project_id, if_exists='append')
+
+@asset
+def scrape_ticket_prices(context):
+    # Configure BigQuery client
+    client = bigquery.Client()
+
+    query = """
+    SELECT DISTINCT match_id, match_url FROM `project_id.dataset.raw_match_links`
+    """
+    # Execute the query
+    query_job = client.query(query)
+    matches = [{'match_id': row.match_id, 'match_url': row.match_url} for row in query_job]
+
+
+    ticket_data = []
+    # Iterate through match URLs to scrape ticket information
+    for match in matches:
+        match_id = match['match_id']
+        match_url = match['match_url']
+        response = requests.get(match_url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        tickets_available = soup.find(class_="tickets-available").span.get_text(strip=True)
+
+        # Your existing logic to find and iterate over tickets
+        tickets = soup.select('li.ticket-row')  # Update the selector as needed
+        for ticket in tickets:
+            stadium_id = ticket['data-stadium-id']
+            ticket_heading = ticket.find('h5', class_='ticket-heading').text
+            ticket_price = ticket.find('div', class_='ticket-price').h4.text
+
+            ticket_quantity_div = ticket.find('div', class_='ticket-quantity')
+            select_element = ticket_quantity_div.find('select')
+            option_values = [int(option['value']) for option in select_element.find_all('option')]
+            ticket_quantities = max(option_values) if option_values else None
+
+            ticket_category = soup.find('span', class_='ticket-info-details clearfix')
+            ticket_dict = {
+                # Populate with actual match details
+                'match_id': match_id,  # You need to define how to extract or set match_id
+                'stadium_id': stadium_id,
+                'tickets_available': tickets_available,  # Define how to extract tickets available
+                'ticket_heading': ticket_heading,
+                'category': ticket_category,
+                'ticket_price': ticket_price,
+                'ticket_quantities': ticket_quantities,
+                # Define these or ensure they are extracted correctly
+            }
+            ticket_data.append(ticket_dict)
+
+    tickets_df = pd.DataFrame(ticket_data)
+    tickets_table_name = f"raw.ticket_prices_{table_name_suffix}"
+    pandas_gbq.to_gbq(tickets_df, 'raw.ticket_prices', project_id=project_id, if_exists='append')

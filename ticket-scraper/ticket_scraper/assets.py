@@ -119,7 +119,6 @@ def scrape_ticket_prices(context):
     query_job = client.query(query)
     matches = [{'match_id': row.match_id, 'match_url': row.match_url} for row in query_job]
 
-
     ticket_data = []
     # Iterate through match URLs to scrape ticket information
     for match in matches:
@@ -156,5 +155,9 @@ def scrape_ticket_prices(context):
             ticket_data.append(ticket_dict)
 
     tickets_df = pd.DataFrame(ticket_data)
+    
+    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    current_time = datetime.datetime.now()
+    table_name_suffix = current_time.strftime('%Y%m%d%H')
     tickets_table_name = f"raw.ticket_prices_{table_name_suffix}"
     pandas_gbq.to_gbq(tickets_df, 'raw.ticket_prices', project_id=project_id, if_exists='append')

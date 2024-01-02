@@ -6,6 +6,8 @@ import pandas_gbq
 import pandas as pd
 import re
 import datetime 
+import db_dtypes
+
 project_id = 'ams-ticket-tracker'
 
 @asset
@@ -45,7 +47,7 @@ def scrape_match_links(context):
     client = bigquery.Client()
 
     query = """
-    SELECT DISTINCT url FROM `project_id.dataset.raw_country_links`
+    SELECT DISTINCT url FROM `raw.country_links`
     """
     # Execute the query
     query_job = client.query(query)
@@ -65,6 +67,7 @@ def scrape_match_links(context):
         match_urls = [a['href'] for a in match_links]
 
         for match_url in match_urls:
+            print(match_url)
             if match_url in all_match_links:
                 pass
             else:
@@ -93,25 +96,24 @@ def scrape_match_links(context):
                     team_two = title_match.group(3).strip()
                     team_one_code = url_matched.group(1).upper()
                     team_two_code = url_matched.group(2).upper()
+                    if team_one_code == 'GERMANY':
+                        team_one_code = 'A1'
                     # print(match_number, team_one, team_two, team_one_code, team_two_code)
 
-                if team_one_code == 'GERMANY':
-                    team_one_code = 'A1'
+                    match_dict = {
+                        'match_url': match_url,
+                        'match_id': match_number,
+                        'venue': venue,
+                        'partition': 1,
+                        'home_country': team_one,
+                        'away_country': team_two,
+                        'home_country_id': team_one_code,
+                        'away_country_id': team_two_code
+                    }
 
-                match_dict = {
-                    'match_url': match_url,
-                    'match_id': match_number,
-                    'venue': venue,
-                    'partition': 1,
-                    'home_country': team_one,
-                    'away_country': team_two,
-                    'home_country_id': team_one_code,
-                    'away_country_id': team_two_code
-                }
-
-                matches_data.append(match_dict)
+                    matches_data.append(match_dict)
     matches_df = pd.DataFrame(matches_data)
-    pandas_gbq.to_gbq(matches_df, 'raw.matches', project_id=project_id, if_exists='append')
+    pandas_gbq.to_gbq(matches_df, 'raw.matches_main', project_id=project_id, if_exists='replace')
 
 @asset
 def scrape_ticket_prices(context):
@@ -119,7 +121,7 @@ def scrape_ticket_prices(context):
     client = bigquery.Client()
 
     query = """
-    SELECT DISTINCT match_id, match_url FROM `project_id.dataset.raw_match_links`
+    SELECT DISTINCT match_id, match_url FROM `raw.matches_main`
     """
     # Execute the query
     query_job = client.query(query)
@@ -130,6 +132,7 @@ def scrape_ticket_prices(context):
     for match in matches:
         match_id = match['match_id']
         match_url = match['match_url']
+        print(match_id, match_url)
         response = requests.get(match_url)
         soup = BeautifulSoup(response.text, 'html.parser')
         tickets_available = soup.find(class_="tickets-available").span.get_text(strip=True)
@@ -137,6 +140,7 @@ def scrape_ticket_prices(context):
         # Your existing logic to find and iterate over tickets
         tickets = soup.select('li.ticket-row')  # Update the selector as needed
         for ticket in tickets:
+            
             stadium_id = ticket['data-stadium-id']
             ticket_heading = ticket.find('h5', class_='ticket-heading').text
             ticket_price = ticket.find('div', class_='ticket-price').h4.text
@@ -156,6 +160,8 @@ def scrape_ticket_prices(context):
                 'category': ticket_category,
                 'ticket_price': ticket_price,
                 'ticket_quantities': ticket_quantities,
+                'home_country_id': 'null',
+                'away_country_id': 'null'
                 # Define these or ensure they are extracted correctly
             }
             ticket_data.append(ticket_dict)
@@ -165,5 +171,5 @@ def scrape_ticket_prices(context):
     timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     current_time = datetime.datetime.now()
     table_name_suffix = current_time.strftime('%Y%m%d%H')
-    tickets_table_name = f"raw.ticket_prices_{table_name_suffix}"
-    pandas_gbq.to_gbq(tickets_df, 'raw.ticket_prices', project_id=project_id, if_exists='append')
+    tickets_table_name = f"raw.tickets_main_{table_name_suffix}"
+    pandas_gbq.to_gbq(tickets_df, tickets_table_name, project_id=project_id, if_exists='append')

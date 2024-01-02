@@ -1,0 +1,6 @@
+# Ignore python cache files
+__pycache__/
+
+# Ignore Dagster specific cache files
+*.db
+*.pyc

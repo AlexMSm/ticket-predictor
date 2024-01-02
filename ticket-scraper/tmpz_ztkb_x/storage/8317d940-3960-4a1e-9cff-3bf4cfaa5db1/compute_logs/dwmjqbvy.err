@@ -1,0 +1,40 @@
+[32m2024-01-02 22:32:15 +0000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 8317d940-3960-4a1e-9cff-3bf4cfaa5db1 - 58149 - LOGS_CAPTURED - Started capturing logs in process (pid: 58149).
+[32m2024-01-02 22:32:15 +0000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 8317d940-3960-4a1e-9cff-3bf4cfaa5db1 - 58149 - scrape_ticket_prices - STEP_START - Started execution of step "scrape_ticket_prices".
+[32m2024-01-02 22:32:49 +0000[0m - dagster - [34mERROR[0m - [31m__ASSET_JOB - 8317d940-3960-4a1e-9cff-3bf4cfaa5db1 - 58149 - scrape_ticket_prices - STEP_FAILURE - Execution of step "scrape_ticket_prices" failed.
+
+dagster._core.errors.DagsterExecutionStepExecutionError: Error occurred while executing op "scrape_ticket_prices"::
+
+pyarrow.lib.ArrowTypeError: Expected bytes, got a 'Tag' object
+
+Stack Trace:
+  File "/Users/alexsmith/Programming/Projects/ticket-predictor/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/utils.py", line 54, in op_execution_error_boundary
+    yield
+  File "/Users/alexsmith/Programming/Projects/ticket-predictor/.venv/lib/python3.10/site-packages/dagster/_utils/__init__.py", line 465, in iterate_with_context
+    next_output = next(iterator)
+  File "/Users/alexsmith/Programming/Projects/ticket-predictor/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 131, in _coerce_op_compute_fn_to_iterator
+    result = invoke_compute_fn(
+  File "/Users/alexsmith/Programming/Projects/ticket-predictor/.venv/lib/python3.10/site-packages/dagster/_core/execution/plan/compute_generator.py", line 125, in invoke_compute_fn
+    return fn(context, **args_to_pass) if context_arg_provided else fn(**args_to_pass)
+  File "/Users/alexsmith/Programming/Projects/ticket-predictor/ticket-scraper/ticket_scraper/assets/scrapes.py", line 175, in scrape_ticket_prices
+    pandas_gbq.to_gbq(tickets_df, tickets_table_name, project_id=project_id, if_exists='append')
+  File "/Users/alexsmith/Programming/Projects/ticket-predictor/.venv/lib/python3.10/site-packages/pandas_gbq/gbq.py", line 1238, in to_gbq
+    connector.load_data(
+  File "/Users/alexsmith/Programming/Projects/ticket-predictor/.venv/lib/python3.10/site-packages/pandas_gbq/gbq.py", line 604, in load_data
+    chunks = load.load_chunks(
+  File "/Users/alexsmith/Programming/Projects/ticket-predictor/.venv/lib/python3.10/site-packages/pandas_gbq/load.py", line 243, in load_chunks
+    load_parquet(
+  File "/Users/alexsmith/Programming/Projects/ticket-predictor/.venv/lib/python3.10/site-packages/pandas_gbq/load.py", line 131, in load_parquet
+    client.load_table_from_dataframe(
+  File "/Users/alexsmith/Programming/Projects/ticket-predictor/.venv/lib/python3.10/site-packages/google/cloud/bigquery/client.py", line 2696, in load_table_from_dataframe
+    _pandas_helpers.dataframe_to_parquet(
+  File "/Users/alexsmith/Programming/Projects/ticket-predictor/.venv/lib/python3.10/site-packages/google/cloud/bigquery/_pandas_helpers.py", line 649, in dataframe_to_parquet
+    arrow_table = dataframe_to_arrow(dataframe, bq_schema)
+  File "/Users/alexsmith/Programming/Projects/ticket-predictor/.venv/lib/python3.10/site-packages/google/cloud/bigquery/_pandas_helpers.py", line 592, in dataframe_to_arrow
+    bq_to_arrow_array(get_column_or_index(dataframe, bq_field.name), bq_field)
+  File "/Users/alexsmith/Programming/Projects/ticket-predictor/.venv/lib/python3.10/site-packages/google/cloud/bigquery/_pandas_helpers.py", line 308, in bq_to_arrow_array
+    return pyarrow.Array.from_pandas(series, type=arrow_type)
+  File "pyarrow/array.pxi", line 1116, in pyarrow.lib.Array.from_pandas
+  File "pyarrow/array.pxi", line 340, in pyarrow.lib.array
+  File "pyarrow/array.pxi", line 86, in pyarrow.lib._ndarray_to_array
+  File "pyarrow/error.pxi", line 91, in pyarrow.lib.check_status
+[0m

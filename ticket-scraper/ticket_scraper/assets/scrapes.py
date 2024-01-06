@@ -115,6 +115,8 @@ def scrape_match_links(context):
     matches_df = pd.DataFrame(matches_data)
     pandas_gbq.to_gbq(matches_df, 'raw.matches_main', project_id=project_id, if_exists='replace')
 
+import logging
+
 @asset
 def scrape_ticket_prices(context):
     # Configure BigQuery client
@@ -132,7 +134,7 @@ def scrape_ticket_prices(context):
     for match in matches:
         match_id = match['match_id']
         match_url = match['match_url']
-        print(match_id, match_url)
+        # print(match_id, match_url)
         response = requests.get(match_url)
         soup = BeautifulSoup(response.text, 'html.parser')
         tickets_available = soup.find(class_="tickets-available").span.get_text(strip=True)
@@ -150,7 +152,8 @@ def scrape_ticket_prices(context):
             option_values = [int(option['value']) for option in select_element.find_all('option')]
             ticket_quantities = max(option_values) if option_values else None
 
-            ticket_category = soup.find('span', class_='ticket-info-details clearfix')
+            ticket_category = soup.find('h5', class_='ticket-heading').text
+            
             ticket_dict = {
                 # Populate with actual match details
                 'match_id': match_id,  # You need to define how to extract or set match_id
@@ -164,6 +167,9 @@ def scrape_ticket_prices(context):
                 'away_country_id': 'null'
                 # Define these or ensure they are extracted correctly
             }
+            logging.debug("Checking types before appending to ticket_data:")
+            # for key, value in ticket_dict.items():
+            #     print(f"{key}: {type(value)}")
             ticket_data.append(ticket_dict)
 
     tickets_df = pd.DataFrame(ticket_data)

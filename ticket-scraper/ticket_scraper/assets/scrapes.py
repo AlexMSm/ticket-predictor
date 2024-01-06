@@ -41,7 +41,7 @@ def scrape_country_links(context) -> None:
     country_df = pd.DataFrame(country_pages_content)
     pandas_gbq.to_gbq(country_df, 'raw.country_links', project_id=project_id, if_exists='replace')
 
-@asset()
+@asset(deps=[scrape_country_links])
 def scrape_match_links() -> None:
     # Configure BigQuery client
     client = bigquery.Client()

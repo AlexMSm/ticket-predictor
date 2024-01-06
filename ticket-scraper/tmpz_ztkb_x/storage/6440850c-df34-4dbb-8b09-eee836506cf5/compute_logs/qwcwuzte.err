@@ -1,0 +1,8 @@
+[32m2024-01-02 22:30:50 +0000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 6440850c-df34-4dbb-8b09-eee836506cf5 - 57981 - LOGS_CAPTURED - Started capturing logs in process (pid: 57981).
+[32m2024-01-02 22:30:50 +0000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 6440850c-df34-4dbb-8b09-eee836506cf5 - 57981 - scrape_match_links - STEP_START - Started execution of step "scrape_match_links".
+  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [00:00<00:00, 5370.43it/s]
+[32m2024-01-02 22:32:06 +0000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 6440850c-df34-4dbb-8b09-eee836506cf5 - 57981 - scrape_match_links - STEP_OUTPUT - Yielded output "result" of type "Any". (Type check passed).
+[32m2024-01-02 22:32:06 +0000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 6440850c-df34-4dbb-8b09-eee836506cf5 - scrape_match_links - Writing file at: /Users/alexsmith/Programming/Projects/ticket-predictor/ticket-scraper/tmpz_ztkb_x/storage/scrape_match_links using PickledObjectFilesystemIOManager...
+[32m2024-01-02 22:32:07 +0000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 6440850c-df34-4dbb-8b09-eee836506cf5 - 57981 - scrape_match_links - ASSET_MATERIALIZATION - Materialized value scrape_match_links.
+[32m2024-01-02 22:32:07 +0000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 6440850c-df34-4dbb-8b09-eee836506cf5 - 57981 - scrape_match_links - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+[32m2024-01-02 22:32:07 +0000[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 6440850c-df34-4dbb-8b09-eee836506cf5 - 57981 - scrape_match_links - STEP_SUCCESS - Finished execution of step "scrape_match_links" in 1m16s.

@@ -1,4 +1,4 @@
-from dagster import asset
+from dagster import asset, op
 import requests
 from bs4 import BeautifulSoup
 from google.cloud import bigquery
@@ -11,7 +11,7 @@ import db_dtypes
 project_id = 'ams-ticket-tracker'
 
 @asset
-def scrape_country_links(context):
+def scrape_country_links(context) -> None:
     
     home_url = 'https://www.livefootballtickets.com/euro-cup-tickets.html'
     response = requests.get(home_url)
@@ -41,8 +41,8 @@ def scrape_country_links(context):
     country_df = pd.DataFrame(country_pages_content)
     pandas_gbq.to_gbq(country_df, 'raw.country_links', project_id=project_id, if_exists='replace')
 
-@asset
-def scrape_match_links(context):
+@asset()
+def scrape_match_links() -> None:
     # Configure BigQuery client
     client = bigquery.Client()
 
@@ -116,8 +116,8 @@ def scrape_match_links(context):
     pandas_gbq.to_gbq(matches_df, 'raw.matches_main', project_id=project_id, if_exists='replace')
 
 
-@asset
-def scrape_ticket_prices(context):
+@op
+def scrape_ticket_prices_op(context):
     # Configure BigQuery client
     client = bigquery.Client()
 

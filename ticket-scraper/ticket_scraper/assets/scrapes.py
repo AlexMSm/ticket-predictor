@@ -115,7 +115,6 @@ def scrape_match_links(context):
     matches_df = pd.DataFrame(matches_data)
     pandas_gbq.to_gbq(matches_df, 'raw.matches_main', project_id=project_id, if_exists='replace')
 
-import logging
 
 @asset
 def scrape_ticket_prices(context):
@@ -167,9 +166,6 @@ def scrape_ticket_prices(context):
                 'away_country_id': 'null'
                 # Define these or ensure they are extracted correctly
             }
-            logging.debug("Checking types before appending to ticket_data:")
-            # for key, value in ticket_dict.items():
-            #     print(f"{key}: {type(value)}")
             ticket_data.append(ticket_dict)
 
     tickets_df = pd.DataFrame(ticket_data)
